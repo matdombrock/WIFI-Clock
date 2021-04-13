@@ -1,0 +1,153 @@
+
+<div id="awaiting" class="awaiting">
+
+</div>
+<H1>SMRT_CLK</H1>
+<input type="range" min="0" max="15" value="0" class="slider" id="intensity" onchange="setIntensity()"><span class="icon">☀</span>
+<br>
+<select id="select-mode" onchange="setMode()">
+  <option value="NA">--MODE--</option>
+  <option value="clock">CLOCK</option>
+  <option value="demo">DEMO</option>
+  <option value="dht">DHT</option>
+  <option value="say">SAY</option>
+</select>
+<select id="select-border" onchange="setBorder()">
+  <option value="NA">--BORDER--</option>
+  <option value="none">NONE</option>
+  <option value="1">1</option>
+  <option value="2">2</option>
+  <option value="3">3</option>
+</select>
+<br>
+<button onclick="say()" class="btn">SAY</button>
+<input type="text" id="myText" class="say-box" value="HELLO" maxlength="6">
+<br>
+<button onclick="checkStatus()" class="btn">CHECK</button>
+<br>
+<a href="https://github.com/matdombrock/WIFI-Clock">GITHUB</a>
+
+<script>
+  const deviceURL = 'http://192.168.1.70';
+  let awaiting = false;
+  checkStatus();
+  function sendCmd(cmd, arg){
+    const Http = new XMLHttpRequest();
+    const url = deviceURL+'/cmd?'+cmd+'='+arg;
+    console.log(url);
+    awaiting = true;
+    document.getElementById("awaiting").classList.add("waiting");
+    Http.open("GET", url);
+    Http.send();
+
+    Http.onreadystatechange = (e) => {
+      console.log(Http.responseText);
+      document.getElementById("awaiting").classList.remove("waiting");
+      awaiting = false;
+    }
+  }
+  function setMode(){
+    const val = document.getElementById("select-mode").value;
+    switch(val){
+      case 'clock':
+        sendCmd('s','clock');
+        break;
+      case 'demo':
+        sendCmd('s','demo');
+        break;
+      case 'dht':
+        sendCmd('s','dht');
+        break;
+      case 'say':
+        say();
+        break;
+    }
+  }
+  function checkStatus(){
+    const Http = new XMLHttpRequest();
+    const url = deviceURL;
+    console.log(url);
+    //should be local
+    awaiting = true;
+    document.getElementById("awaiting").classList.add("waiting");
+    Http.open("GET", url);
+    Http.send();
+
+    Http.onreadystatechange = (e) => {
+      document.getElementById("awaiting").classList.remove("waiting");
+        awaiting = false;
+    }
+
+    setTimeout(function(){ 
+      if(awaiting){
+        alert("DEVICE OFFLINE!");
+        checkStatus();
+      }else{
+        setTimeout(function(){ 
+          if(awaiting){
+            alert("DEVICE OFFLINE!");
+          }
+          checkStatus();
+        }, 30000);
+      }
+    }, 000);
+  }
+  function setBorder(){
+    const val = document.getElementById("select-border").value;
+    console.log('val: '+val);
+    sendCmd('border',val);
+  }
+  function say(){
+    const val = document.getElementById("myText").value.toUpperCase();
+    sendCmd('say', val);
+    document.getElementById("select-mode").value = "say";
+  }
+  function setIntensity(){
+    const val = document.getElementById("intensity").value;
+    sendCmd('intensity', val);
+  }
+</script>
+<style>
+  html{
+    font-family: Helvetica, "Trebuchet MS", Verdana, sans-serif;
+  }
+  body{
+    background:rgb(32, 32, 32);
+    color:white;
+    font-size: 2vw;
+    text-align: center;
+  }
+  input, .btn, select{
+    margin:0.5rem;
+    padding:0.75rem;
+    background-color: rgb(68, 68, 68);
+    color: white;
+    font-size: 1em;
+  }
+  input[type="text"]{
+    background-color: rgb(88, 88, 88);
+  }
+  input[type="range"]{
+    width:25vw;
+  }
+  .icon{
+    margin:0.5rem;
+    padding:0.75rem;
+    display:inline-block;
+    top:-0.5rem;
+    position:relative;
+    font-size: 2em;
+  }
+  .say-box{
+    width: 8rem;
+  }
+  .awaiting{
+    background-color: rgb(0, 255, 0);
+    width: 100%;
+    height:1em;
+    margin-bottom: 15vh;
+  }
+  .waiting{
+    background-color: red;
+  }
+</style>
