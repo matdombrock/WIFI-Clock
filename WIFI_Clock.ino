@@ -257,9 +257,9 @@ void drawClock(){
   }
   lastMin = localTime[3];
 }
-void say(){
+void println(String str){
   char buf[6];
-  storedText.toCharArray(buf, 7);
+  str.toCharArray(buf, 7);
   matrix.lock();
   matrix.clear();
   for(int i = 0; i<6; i++){
@@ -270,21 +270,13 @@ void say(){
   }
   matrix.unlock();
 }
+void say(){
+  println(storedText);
+}
 void drawDHT(){
   updateDHT();
-  //say
-  char buf[6];
   String DHTString = String(lastTemp).substring(0,2) + "C" + String(lastHum).substring(0,2) + "H";
-  DHTString.toCharArray(buf, 7);
-  matrix.lock();
-  matrix.clear();
-  for(int i = 0; i<6; i++){
-    if(buf[i]==NULL){
-      buf[i] = ' ';
-    }
-    matrix.drawChar(buf[i],1+(i*5),1);  
-  }
-  matrix.unlock();
+  println(DHTString);
 }
 /*
 * MATRIX BORDER FUNCTIONS
@@ -339,6 +331,21 @@ void border3(){
   matrix.drawPoint(lenX,random(lenY));
 }
 /*
+* CHANGE MODE ON BUTTON
+*/
+void checkBtn(){
+  buttonState = digitalRead(15);
+  if(buttonState){
+    Serial.println("BTN CHANGE MODE");
+    state++;
+    if(state>3){
+      state = 0;
+    }
+    runMode();
+    delay(500);
+  }
+}
+/*
 * RUN CURRENT MODE
 */
 void runMode(){
@@ -359,21 +366,6 @@ void runMode(){
       drawClock();
       break;
    }
-}
-/*
-* CHANGE MODE ON BUTTON
-*/
-void checkBtn(){
-  buttonState = digitalRead(15);
-  if(buttonState){
-    Serial.println("BTN CHANGE MODE");
-    state++;
-    if(state>3){
-      state = 0;
-    }
-    runMode();
-    delay(500);
-  }
 }
 /*
 * RUN CURRENT BORDER
