@@ -40,18 +40,34 @@ DHT dht(DHTPIN, DHTTYPE);
 /*
 * SETUP GLOBALS
 */
-float lastHum = 0;
-float lastTemp = 0;
-int state = 0; // mode
-int stateB = 0; // border mode
-int si = 0;
-int sb = 0; // global border iterator
-int localTime[4];
-int lastMin = -1;
-String storedText = "ABC123";
-int lenX = matrix.lenX()-1;
-int lenY = matrix.lenY()-1;
-bool buttonState = 0;
+// float lastHum = 0;
+// float lastTemp = 0;
+// int mode = 0; // mode
+// int modeB = 0; // border mode
+// int si = 0;
+// int sb = 0; // global border iterator
+// int localTime[4];
+// int lastMin = -1;
+// String storedText = "ABC123";
+// int lenX = matrix.lenX()-1;
+// int lenY = matrix.lenY()-1;
+// bool buttonState = 0;
+
+class State {
+  public:
+    float lastHum = 0;
+    float lastTemp = 0;
+    int mode = 0; // mode
+    int modeB = 0; // border mode
+    int si = 0;
+    int sb = 0; // global border iterator
+    int localTime[4];
+    int lastMin;
+    String storedText = "ABC123";
+    int lenX = matrix.lenX()-1;
+    int lenY = matrix.lenY()-1;
+    bool buttonState = 0;
+}st;
 /*
 * SETUP SERVER FUNCTIONS
 */
@@ -83,17 +99,17 @@ void handleCmd(){
   if(cmd == "s"){
     if(argv == "clock"){
       Serial.println("MODE: CLOCK");
-      state = 0;
+      st.mode = 0;
       // Reset lastMin so clock updates instantly
-      lastMin = -1;
+      st.lastMin = -1;
     }
     if(argv == "demo"){
       Serial.println("MODE: DEMO");
-      state = 1;
+      st.mode = 1;
     }
     if(argv == "dht"){
       Serial.println("MODE: DHT");
-      state = 3;
+      st.mode = 3;
     }
   }
   if(cmd == "intensity"){
@@ -101,30 +117,30 @@ void handleCmd(){
   }
   if(cmd == "say"){
     Serial.println("MODE: SAY");
-    storedText = argv;
+    st.storedText = argv;
     Serial.print("Set saved text to:");
-    Serial.println(storedText);
-    state = 2;
+    Serial.println(st.storedText);
+    st.mode = 2;
   }
   if(cmd == "border"){
     if(argv == "none"){
       Serial.println("BORDER: NONE");
-      stateB = 0;
+      st.modeB = 0;
     }
     if(argv == "1"){
       Serial.println("BORDER: 1");
-      stateB = 1;
+      st.modeB = 1;
     }
     if(argv == "2"){
       Serial.println("BORDER: 2");
-      stateB = 2;
+      st.modeB = 2;
     }
     if(argv == "3"){
       Serial.println("BORDER: 3");
-      stateB = 3;
+      st.modeB = 3;
     }
   }
-  Serial.println(state);
+  Serial.println(st.mode);
 }
 /*
 * TIME FUNCTIONS
@@ -174,10 +190,10 @@ void updateTime(){
     m1 = 5;
     m2 = tmin - 50;
   }
-  localTime[0] = h1;
-  localTime[1] = h2;
-  localTime[2] = m1;
-  localTime[3] = m2;
+  st.localTime[0] = h1;
+  st.localTime[1] = h2;
+  st.localTime[2] = m1;
+  st.localTime[3] = m2;
   #if DEBUG == true
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
   Serial.println(thour);
@@ -223,9 +239,9 @@ void updateDHT(){
   Serial.print(hif);
   Serial.println(F("°F"));
   #endif
-  if(lastHum != h && lastTemp != t){
-    lastHum = h;
-    lastTemp = t;
+  if(st.lastHum != h && st.lastTemp != t){
+    st.lastHum = h;
+    st.lastTemp = t;
   }
 }
 /*
@@ -245,17 +261,17 @@ void demoRandomNoise(){
 }
 void drawClock(){
   // Skip if time has not changed
-  if(localTime[3] != lastMin || true){
+  if(st.localTime[3] != st.lastMin || true){
     matrix.lock();
     matrix.clear();
-    matrix.drawNum(localTime[0],5,1);
-    matrix.drawNum(localTime[1],10,1);
+    matrix.drawNum(st.localTime[0],5,1);
+    matrix.drawNum(st.localTime[1],10,1);
     matrix.drawChar(':',14,1);
-    matrix.drawNum(localTime[2],18,1);
-    matrix.drawNum(localTime[3],23,1);  
+    matrix.drawNum(st.localTime[2],18,1);
+    matrix.drawNum(st.localTime[3],23,1);  
     matrix.unlock(); 
   }
-  lastMin = localTime[3];
+  st.lastMin = st.localTime[3];
 }
 void println(String str){
   char buf[6];
@@ -271,75 +287,75 @@ void println(String str){
   matrix.unlock();
 }
 void say(){
-  println(storedText);
+  println(st.storedText);
 }
 void drawDHT(){
   updateDHT();
-  String DHTString = String(lastTemp).substring(0,2) + "C" + String(lastHum).substring(0,2) + "H";
+  String DHTString = String(st.lastTemp).substring(0,2) + "C" + String(st.lastHum).substring(0,2) + "H";
   println(DHTString);
 }
 /*
 * MATRIX BORDER FUNCTIONS
 */
 void border(){
-  if(sb > 300){
-    matrix.drawLine(0,0, 0,lenY);
-  }else if(sb > 200){
-    matrix.drawLine(lenX,0, 0,0);
-  }else if(sb > 100){
-    matrix.drawLine(lenX,lenY, lenX,0);
+  if(st.sb > 300){
+    matrix.drawLine(0,0, 0,st.lenY);
+  }else if(st.sb > 200){
+    matrix.drawLine(st.lenX,0, 0,0);
+  }else if(st.sb > 100){
+    matrix.drawLine(st.lenX,st.lenY, st.lenX,0);
   }else{
-    matrix.drawLine(0,lenY, lenX,lenY);
+    matrix.drawLine(0,st.lenY, st.lenX,st.lenY);
   }
-  sb+=10;
-  if(sb>400){
-    sb=0;
+  st.sb+=10;
+  if(st.sb>400){
+    st.sb=0;
   }
 }
 void border2()
 {
-  if(sb>31){
+  if(st.sb>31){
     //reverse
-    int sx = sb - 31;
+    int sx = st.sb - 31;
     matrix.drawPoint(0,sx/4);
-    matrix.drawPoint(lenX,lenY-sx/4);
+    matrix.drawPoint(st.lenX,st.lenY-sx/4);
     matrix.drawPoint(sx,0);
-    matrix.drawPoint(lenX-sx,lenY);
+    matrix.drawPoint(st.lenX-sx,st.lenY);
   }else{
-    matrix.drawPoint(0,lenY-sb/4);
-    matrix.drawPoint(lenX,sb/4);
-    matrix.drawPoint(lenX-sb,0);
-    matrix.drawPoint(sb,lenY);
+    matrix.drawPoint(0,st.lenY-st.sb/4);
+    matrix.drawPoint(st.lenX,st.sb/4);
+    matrix.drawPoint(st.lenX-st.sb,0);
+    matrix.drawPoint(st.sb,st.lenY);
   }
-  sb++;
-  if(sb>63){
-    sb=0;
+  st.sb++;
+  if(st.sb>63){
+    st.sb=0;
   }
 }
 void border3(){
-  matrix.drawPoint(random(lenX),0);
-  matrix.drawPoint(random(lenX),lenY);
-  matrix.drawPoint(0,random(lenY));
-  matrix.drawPoint(lenX,random(lenY));
-  matrix.drawPoint(random(lenX),0);
-  matrix.drawPoint(random(lenX),lenY);
-  matrix.drawPoint(0,random(lenY));
-  matrix.drawPoint(lenX,random(lenY));
-  matrix.drawPoint(random(lenX),0);
-  matrix.drawPoint(random(lenX),lenY);
-  matrix.drawPoint(0,random(lenY));
-  matrix.drawPoint(lenX,random(lenY));
+  matrix.drawPoint(random(st.lenX),0);
+  matrix.drawPoint(random(st.lenX),st.lenY);
+  matrix.drawPoint(0,random(st.lenY));
+  matrix.drawPoint(st.lenX,random(st.lenY));
+  matrix.drawPoint(random(st.lenX),0);
+  matrix.drawPoint(random(st.lenX),st.lenY);
+  matrix.drawPoint(0,random(st.lenY));
+  matrix.drawPoint(st.lenX,random(st.lenY));
+  matrix.drawPoint(random(st.lenX),0);
+  matrix.drawPoint(random(st.lenX),st.lenY);
+  matrix.drawPoint(0,random(st.lenY));
+  matrix.drawPoint(st.lenX,random(st.lenY));
 }
 /*
 * CHANGE MODE ON BUTTON
 */
 void checkBtn(){
-  buttonState = digitalRead(15);
-  if(buttonState){
+  st.buttonState = digitalRead(15);
+  if(st.buttonState){
     Serial.println("BTN CHANGE MODE");
-    state++;
-    if(state>3){
-      state = 0;
+    st.mode++;
+    if(st.mode>3){
+      st.mode = 0;
     }
     runMode();
     delay(500);
@@ -349,7 +365,7 @@ void checkBtn(){
 * RUN CURRENT MODE
 */
 void runMode(){
-   switch(state){
+   switch(st.mode){
     case 0:
       drawClock();
       break;
@@ -371,7 +387,7 @@ void runMode(){
 * RUN CURRENT BORDER
 */
 void runBorder(){
-  switch (stateB){
+  switch (st.modeB){
     case 0:
       break;
     case 1:
