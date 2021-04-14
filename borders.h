@@ -4,7 +4,15 @@
 #include <MatrixGL.h>
 #include "State.h"
 
+void clearBorder(MatrixGL &matrix, State &st){
+  int points[] = {0,0, st.lenX,0, st.lenX,st.lenY, 0,st.lenY, 0,0};
+  matrix.drawPath(points,10, false);
+  //matrix.drawLine(0,0, 8,8, false);
+}
+
+
 void border(MatrixGL &matrix, State &st){
+  clearBorder(matrix, st);
   if(st.sb > 300){
     matrix.drawLine(0,0, 0,st.lenY);
   }else if(st.sb > 200){
@@ -22,6 +30,7 @@ void border(MatrixGL &matrix, State &st){
 
 void border2(MatrixGL &matrix, State &st)
 {
+  clearBorder(matrix, st);
   if(st.sb>31){
     //reverse
     int sx = st.sb - 31;
@@ -41,6 +50,7 @@ void border2(MatrixGL &matrix, State &st)
   }
 }
 void border3(MatrixGL &matrix, State &st){
+  clearBorder(matrix, st);
   matrix.drawPoint(random(st.lenX),0);
   matrix.drawPoint(random(st.lenX),st.lenY);
   matrix.drawPoint(0,random(st.lenY));
@@ -54,6 +64,7 @@ void border3(MatrixGL &matrix, State &st){
   matrix.drawPoint(0,random(st.lenY));
   matrix.drawPoint(st.lenX,random(st.lenY));
 }
+
 
 void runBorder(MatrixGL &matrix, State &st){
   switch (st.modeB){
