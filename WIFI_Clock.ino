@@ -113,6 +113,10 @@ void checkBtn(){
     if(st.mode>3){
       st.mode = 0;
     }
+    if(st.mode==0){
+      //Trigger clock
+      st.lastMin = -1;
+    }
     runMode(matrix, st);
     delay(500);
   }

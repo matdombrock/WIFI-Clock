@@ -40,7 +40,7 @@ void demoRandomNoise(MatrixGL &matrix){
 
 void drawClock(MatrixGL &matrix, State &st){
   // Skip if time has not changed
-  if(st.localTime[3] != st.lastMin || true){
+  if(st.localTime[3] != st.lastMin){
     matrix.lock();
     matrix.clear();
     matrix.drawNum(st.localTime[0],5,1);
