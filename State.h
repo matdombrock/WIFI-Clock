@@ -9,7 +9,7 @@ class State {
     int si = 0;
     int sb = 0; // global border iterator
     int localTime[4];
-    int lastMin;
+    int lastMin =-1;
     String storedText = "ABC123";
     int lenX = 8;
     int lenY = 8;
